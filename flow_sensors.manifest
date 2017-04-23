@@ -1,0 +1,12 @@
+Description: Interfaces to hall-effect water flow sensors to quantify water usage.
+Copyright 2017
+Author: David L Sprague
+Email: david.sprague@gmail.com
+License: GNU GPL 3.0
+
+Requirements: Python blinker module (included with software distro), pyserial library
+
+##### List all plugin files below preceded by a blank line [file_name.ext path] relative to OSPi directory #####
+
+flow_sensors.py plugins
+flow_sensors.manifest plugins/manifests

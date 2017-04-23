@@ -1,0 +1,58 @@
+$def with (m_vals)
+
+$var title: $_('SIP - FLow Sensors Settings')
+$var page: plugins
+<script>
+   // Initialize behaviors
+   jQuery(document).ready(function(){
+      jQuery("#cSubmit").click(function() {
+         jQuery("#pluginForm").submit();
+      });
+      jQuery("button#cCancel").click(function(){
+         window.location="/";
+      });
+       jQuery("button#docButton").click(function(){
+           window.open("https://github.com/DaveSprague", "_blank");
+       })
+   });
+</script>
+
+<div id="plugin">
+   <div class="title">$_('Flow Sensors Settings')
+   <button class="execute" id="docButton" type="button" >$_('Help')</button>
+   </div>
+   <p>$_('A plugin for using flow sensors to measure water usage.')
+   </p>
+   <br>
+   <form id="pluginForm" action="/flow_sensors-save" method="get">
+   <div class='option' title='Type of Interface to Flow Sensors'><span class='label'>$_('Interface'):</span>
+      <select name="method">
+         <option value="Simulated" ${" selected" if m_vals[u"method"]=="Simulated" else ""}>Simulated</option>
+         <option value="Arduino-Serial" ${" selected" if m_vals[u"method"]=="Arduino-Serial" else ""}>Arduino-Serial</option>
+         <option value="RaspberryPi-GPIO" ${" selected" if m_vals[u"method"]=="RaspberryPi-GPIO" else ""}>RaspberryPi-GPIO</option>
+         
+      </select>
+      <span class='tooltip'>$_('Method used to interface to flow_sensors')</span>
+   </div>
+
+<div class='option' title='Type of Flow Sensors'><span class='label'>$_('Flow Sensor Type'):</span>
+      <select name="sensor_type">
+         <option value="Seeed 1/2 inch" ${" selected" if m_vals[u"sensor_type"]=="Seeed 1/2 inch" else ""}>Seeed 1/2 inch</option>
+         <option value="Seed 3/4 inch" ${" selected" if m_vals[u"sensor_type"]=="Seed 3/4 inch" else ""}>Seed 3/4 inch</option>
+         
+      </select>
+      <span class='tooltip'>$_('Type of flow_sensor being used')</span>
+   </div>
+
+   <div class='option' title='Units for water quantity -- Liters or Gallons'><span class='label'>$_('Water Quantity Units'):</span>
+      <input type="radio" name="units" value="Gallons" ${" checked" if m_vals[u"units"]==u"Gallons" else ""}>Gallons
+      <input type="radio" name="units" value="Liters" ${" checked" if m_vals[u"units"]==u"Liters" else ""}>Liters
+      <span class='tooltip'>$_('Select the units to be used for water quantity')</span>
+   </div>
+   <br>
+   </form>
+</div>
+<div id="controls">
+    <button id="cSubmit" class="submit"><b>$_('Submit')</b></button>
+    <button id="cCancel" class="cancel danger">$_('Cancel')</button>
+</div>
