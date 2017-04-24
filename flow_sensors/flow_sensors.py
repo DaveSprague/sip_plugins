@@ -45,9 +45,9 @@ gv.plugin_data['fs']['settings']['interface'] = 'Simulated'
 gv.plugin_data['fs']['settings']['sensor_type'] = 'Seeed 1/2 inch'
 gv.plugin_data['fs']['settings']['units'] = 'Gallons'
 if gv.plugin_data['fs']['settings']['units'] == 'Gallons':
-    gv.plugin_data['fs']['rate_units'] = 'GpH'
+    gv.plugin_data['fs']['settings']['rate_units'] = 'GpH'
 else:
-    gv.plugin_data['fs']['rate_units'] = 'LpH'
+    gv.plugin_data['fs']['settings']['rate_units'] = 'LpH'
 
 # add this plugin's log value to the SIP log
 try:
@@ -232,6 +232,7 @@ class save_settings(ProtectedPage):
         for key in qdict:
             # watch out for checkboxes since they only return a value in qdict if they're checked!!
             settings[key] = qdict[key]
+        reset_flow_sensors()
         print "after update from qdict, settings = " + str(settings)
         with open('./data/flow_sensors.json', 'w') as f:  # Edit: change name of json file
              json.dump(settings, f) # save to file
