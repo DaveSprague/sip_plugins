@@ -26,10 +26,10 @@ $var page: plugins
    <br>
    <form id="pluginForm" action="/flow_sensors-save" method="get">
    <div class='option' title='Type of Interface to Flow Sensors'><span class='label'>$_('Interface'):</span>
-      <select name="method">
-         <option value="Simulated" ${" selected" if m_vals[u"method"]=="Simulated" else ""}>Simulated</option>
-         <option value="Arduino-Serial" ${" selected" if m_vals[u"method"]=="Arduino-Serial" else ""}>Arduino-Serial</option>
-         <option value="RaspberryPi-GPIO" ${" selected" if m_vals[u"method"]=="RaspberryPi-GPIO" else ""}>RaspberryPi-GPIO</option>
+      <select name="interface">
+         <option value="Simulated" ${" selected" if m_vals[u"interface"]=="Simulated" else ""}>Simulated</option>
+         <option value="Arduino-Serial" ${" selected" if m_vals[u"interface"]=="Arduino-Serial" else ""}>Arduino-Serial</option>
+         <option value="RaspberryPi-GPIO" ${" selected" if m_vals[u"interface"]=="RaspberryPi-GPIO" else ""}>RaspberryPi-GPIO</option>
          
       </select>
       <span class='tooltip'>$_('Method used to interface to flow_sensors')</span>

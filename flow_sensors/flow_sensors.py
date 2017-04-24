@@ -51,7 +51,7 @@ else:
 
 # add this plugin's log value to the SIP log
 try:
-    gv.logged_values.append( [_('usage'), lambda : '{:.3f}'.format(gv.plugin_data["fs"]["program_amounts"][gv.lrun[0]]) ])
+    gv.logged_values.append( [_('usage'), lambda : '{:.2f}'.format(gv.plugin_data["fs"]["program_amounts"][gv.lrun[0]]) ])
 except AttributeError:
     print "gv.logged_values doesn't exist so logging not available for flow_sensor plugin"
 
