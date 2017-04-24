@@ -10,3 +10,4 @@ Requirements: Python blinker module (included with software distro), pyserial li
 
 flow_sensors.py plugins
 flow_sensors.manifest plugins/manifests
+flow_sensors.html templates
