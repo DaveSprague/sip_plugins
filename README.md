@@ -18,6 +18,10 @@ email_adj
 ----------
 Sends status email to google email account
 
+flow_sensors
+----------
+Use flow sensors to monitor water usage
+
 lcd_adj
 ----------
 Uses I2C for LCD 16x2 char data display  
