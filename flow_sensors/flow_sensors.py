@@ -1,12 +1,9 @@
 # !/usr/bin/env python
 #  This plugin includes example functions that are triggered by events in sip.py
 
-# author: David L Sprague
-
-# Plan is to support flow sensors that are attached to an arduino as well as flow
-# sensors attached directly to RPi pins.
-# Also will include a "simulated" flow sensor interface to allow testing when the sensor
-# hardware isn't available.
+# Note: RPi direct interface to sensors is not currently supported even though the option
+#  is given in the settings page.  There's some skeleton code ready below where support can
+#  be added if we decide it's important.
 
 # Operation: at the lowest level, the flow sensor generates a series of pulses on an input
 # pin of the Arduino or RPi that is related to the flow rate by a forumla given by the
@@ -17,7 +14,7 @@
 # this counter and determines both the current flow rate (liters or gallons per hour)
 # and the total amount of water flow (in liters or gallons) since the counter was reset.
 
-# The flow rates and flow amounts for each line (valve) is stored in a gv.plugin_data['fs']
+# The flow rates and flow amounts for each station is stored in a gv.plugin_data['fs']
 # dictionary.
 import web  # web.py framework
 import gv  # Get access to SIP's settings
@@ -38,8 +35,10 @@ urls.extend([
     ])
 
 gv.plugin_menu.append(['Flow Sensors Plugin', '/flow_sensors-sp'])
+
 mySettings = { }
-print "defined mySettings"
+# initialize settings values since the program will start running before the user has a chance
+# to set them.  
 mySettings = {'method': 'Simulated', 'sensor_type': 'Seeed 1/2 inch','units': 'Gallons' }
 print "my settings are: " + str(mySettings)
 
@@ -74,6 +73,7 @@ class save_settings(ProtectedPage):
         print "mySettings : " + str(mySettings)
         with open('./data/flow_sensors.json', 'w') as f:  # Edit: change name of json file
              json.dump(qdict, f) # save to file
+             # need to add code here to transfer the new values from qdict to mySettings.
              print "flow sensor settings file saved"
              print "mySettings : " + str(mySettings)
         raise web.seeother('/')  # Return user to home page.
@@ -86,8 +86,6 @@ print("flow sensors plugin loaded...")
 gv.plugin_data['fs'] = {}
 gv.plugin_data['fs']['rates'] = [0]*8
 
-gv.plugin_data['fs']['sensor_type'] = 'Seeed 1/2 inch' # or 'Seed 3/4 inch'
-gv.plugin_data['fs']['units'] = 'Gallons' # 'Liters' or 'Gallons'
 if gv.plugin_data['fs']['units'] == 'Gallons':
     gv.plugin_data['fs']['rate_units'] = 'GpH'
 else:
@@ -143,13 +141,6 @@ def reset_flow_sensors():
         return True
     print("Flow Sensor Type Failed in Reset")
     return False
-
-def setup_flow_sensors():
-    """
-    Resets parameters used by this plugin for all three flow_sensor types.
-    Used at initialization and at the start of each Program/Run-Once
-    """
-    reset_flow_sensors()
 
 def read_flow_counters(reset=False):
     """
@@ -228,7 +219,7 @@ def flow_sensor_loop():
         update_flow_values()
         time.sleep(delta_t)
 
-setup_flow_sensors()
+reset_flow_sensors()
 thread.start_new_thread(flow_sensor_loop, ())
 
 ### Stations where sheduled to run ###
