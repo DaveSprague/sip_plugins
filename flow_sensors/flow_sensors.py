@@ -44,6 +44,16 @@ gv.plugin_data['fs']['settings'] = {}
 gv.plugin_data['fs']['settings']['interface'] = 'Simulated'
 gv.plugin_data['fs']['settings']['sensor_type'] = 'Seeed 1/2 inch'
 gv.plugin_data['fs']['settings']['units'] = 'Gallons'
+print("Settings initialized to: " + str(gv.plugin_data['fs']['settings']))
+try:
+    with open('./data/flow_sensors.json', 'r') as f:  # Read settings from json file if it exists
+        gv.plugin_data['fs']['settings'] = json.load(f)
+        print("Updating settings from json file: " + str(gv.plugin_data['fs']['settings']))
+except IOError:  # If file does not exist return empty value
+    print("No flow_sensors.json file")
+    print("my settings here are: " + str(gv.plugin_data['fs']['settings']))
+
+
 if gv.plugin_data['fs']['settings']['units'] == 'Gallons':
     gv.plugin_data['fs']['settings']['rate_units'] = 'GpH'
 else:
@@ -53,7 +63,7 @@ else:
 try:
     gv.logged_values.append( [_('usage'), lambda : '{:.2f}'.format(gv.plugin_data["fs"]["program_amounts"][gv.lrun[0]]) ])
 except AttributeError:
-    print "gv.logged_values doesn't exist so logging not available for flow_sensor plugin"
+    print("gv.logged_values doesn't exist so logging not available for flow_sensor plugin")
 
     
 
