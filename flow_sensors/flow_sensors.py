@@ -36,6 +36,12 @@ urls.extend([
 
 gv.plugin_menu.append(['Flow Sensors Plugin', '/flow_sensors-sp'])
 
+def fixPerHour():
+    if gv.plugin_data['fs']['settings']['units'] == 'Gallons':
+        gv.plugin_data['fs']['settings']['rate_units'] = 'GpH'
+    else:
+        gv.plugin_data['fs']['settings']['rate_units'] = 'LpH'
+
 print("flow sensors plugin loaded...")
 # initialize settings and other variables in gv
 gv.plugin_data['fs'] = {}
@@ -44,6 +50,8 @@ gv.plugin_data['fs']['settings'] = {}
 gv.plugin_data['fs']['settings']['interface'] = 'Simulated'
 gv.plugin_data['fs']['settings']['sensor_type'] = 'Seeed 1/2 inch'
 gv.plugin_data['fs']['settings']['units'] = 'Gallons'
+fixPerHour()
+
 print("Settings initialized to: " + str(gv.plugin_data['fs']['settings']))
 try:
     with open('./data/flow_sensors.json', 'r') as f:  # Read settings from json file if it exists
@@ -53,11 +61,6 @@ except IOError:  # If file does not exist return empty value
     print("No flow_sensors.json file")
     print("my settings here are: " + str(gv.plugin_data['fs']['settings']))
 
-
-if gv.plugin_data['fs']['settings']['units'] == 'Gallons':
-    gv.plugin_data['fs']['settings']['rate_units'] = 'GpH'
-else:
-    gv.plugin_data['fs']['settings']['rate_units'] = 'LpH'
 
 # add this plugin's log value to the SIP log
 try:
@@ -242,6 +245,7 @@ class save_settings(ProtectedPage):
         for key in qdict:
             # watch out for checkboxes since they only return a value in qdict if they're checked!!
             settings[key] = qdict[key]
+        fixPerHour()
         reset_flow_sensors()
         print "after update from qdict, settings = " + str(settings)
         with open('./data/flow_sensors.json', 'w') as f:  # Edit: change name of json file
