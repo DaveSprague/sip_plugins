@@ -36,11 +36,13 @@ urls.extend([
 
 gv.plugin_menu.append(['Flow Sensors Plugin', '/flow_sensors-sp'])
 
-def fixPerHour():
-    if gv.plugin_data['fs']['settings']['units'] == 'Gallons':
-        gv.plugin_data['fs']['settings']['rate_units'] = 'GpH'
-    else:
-        gv.plugin_data['fs']['settings']['rate_units'] = 'LpH'
+#CONVERSION_MULTIPLIER = {'Seeed 1/2 inch': {'Liters': 60.0/7.5, 'Gallons': 60/7.5/3.78541},
+#                         'Seeed 3/4 inch': {'Liters': 60.0/5.5, 'Gallons': 60/5.5/3.78541}}
+
+def fixPerHour():  # recalculate settings derived from other settings
+    isLiters = gv.plugin_data['fs']['settings']['units'] == 'Liters'
+    gv.plugin_data['fs']['settings']['rate_units'] = 'LpH' if isLiters else 'GpH'
+
 
 print("flow sensors plugin loaded...")
 # initialize settings and other variables in gv
@@ -48,8 +50,10 @@ gv.plugin_data['fs'] = {}
 gv.plugin_data['fs']['rates'] = [0]*8
 gv.plugin_data['fs']['settings'] = {}
 gv.plugin_data['fs']['settings']['interface'] = 'Simulated'
-gv.plugin_data['fs']['settings']['sensor_type'] = 'Seeed 1/2 inch'
-gv.plugin_data['fs']['settings']['units'] = 'Gallons'
+gv.plugin_data['fs']['settings']['sensor_type'] = 'Seeed/Digiten 1/2 inch'
+gv.plugin_data['fs']['settings']['pulses_per_liter'] = 450.0
+gv.plugin_data['fs']['settings']['units'] = 'Liters'
+gv.plugin_data['fs']['settings']['rate_units'] = 'LpH'
 fixPerHour()
 
 print("Settings initialized to: " + str(gv.plugin_data['fs']['settings']))
@@ -68,19 +72,6 @@ try:
 except AttributeError:
     print("gv.logged_values doesn't exist so logging not available for flow_sensor plugin")
 
-    
-
-# multiply conversion table value by pulses per second to get Liters or Gallons per hour
-# to get total amount, divide pulse count by the elapsed time in seconds and then
-# multiply by conversion table factor to get Total Liters or Total Gallons during
-# the elapsed time period.
-
-# TODO: for some valves like the 1/2" and 3/4" brass valves we may need an offset in addition to
-#         a multiplier value so the correct would have the form of Counter*Mult + Offset rather
-#         than just Counter*Mult.
-
-CONVERSION_MULTIPLIER = {'Seeed 1/2 inch': {'Liters': 60.0/7.5, 'Gallons': 60/7.5/3.78541},
-                         'Seeed 3/4 inch': {'Liters': 60.0/5.5, 'Gallons': 60/5.5/3.78541}}
 
 # TODO: add support for other types of RPi serial interfaces with different /dev/names
 
@@ -98,7 +89,7 @@ def reset_flow_sensors():
     Resets parameters used by this plugin for all three flow_sensor types.
     Used at initialization and at the start of each Program/Run-Once 
     """
-    print "resetting flow sensors"
+    print("resetting flow sensors")
     gv.plugin_data['fs']['start_time'] = time.time()
     gv.plugin_data['fs']['prev_read_time'] = time.time()
     gv.plugin_data['fs']['prev_read_cntrs'] = [0]*8
@@ -170,22 +161,34 @@ def update_flow_values():
     """
     Updates gv values for the current flow rate and accumulated flow amount for each flow sensors.
     """
-    sensor_type = gv.plugin_data['fs']['settings']['sensor_type']
+    pulses_per_liter = gv.plugin_data['fs']['settings']['pulses_per_liter']
     units = gv.plugin_data['fs']['settings']['units']
     current_time = time.time()
 
     elapsed_prev_read = current_time - gv.plugin_data['fs']['prev_read_time']  # for flow rate
     # print("elapsed time: " + str(elapsed_time))
 
-    conv_mult = CONVERSION_MULTIPLIER[sensor_type][units]
     prev_cntrs = gv.plugin_data['fs']['prev_read_cntrs']
 
     curr_cntrs = read_flow_counters()
 
-    gv.plugin_data['fs']['rates'] = [(cntr-prev_cntr)*conv_mult/elapsed_prev_read for \
-                                     cntr, prev_cntr in zip(curr_cntrs, prev_cntrs)]
-    gv.plugin_data['fs']['program_amounts'] = [cntr*conv_mult/60/60 for cntr in curr_cntrs]
+    # calculate flow amount in Liters as # of pulses * liters_per_pulse
+    #  or #_of_pulses / (pulses_per_liter)
 
+    amt_conv_mult = 1.0/pulses_per_liter  # or liters per pulse
+    if 'units' == 'Gallons':
+        amt_conv_mult /= 3.78541
+
+    gv.plugin_data['fs']['program_amounts'] = [cntr*amt_conv_mult for cntr in curr_cntrs]
+
+    # calculate flow rate in Liters per hour = pulses_per_second * (seconds_per_hour * liters_per_pulse)
+    rate_conv_mult = 60.*60./pulses_per_liter
+    if 'units' == 'Gallons':
+        rate_conv_mult /= 3.78541
+
+    gv.plugin_data['fs']['rates'] = [(cntr-prev_cntr)*rate_conv_mult/elapsed_prev_read for \
+                                     cntr, prev_cntr in zip(curr_cntrs, prev_cntrs)]
+    
     # print("Rates:" + str(gv.plugin_data['fs']['rates']))
     # print("Amounts:" + str(gv.plugin_data['fs']['program_amounts']))
 
@@ -220,7 +223,7 @@ class settings(ProtectedPage):
     
     def GET(self):
         settings = gv.plugin_data['fs']['settings']
-        print "settings are:  " + str(settings)
+        print("settings are:  " + str(settings))
         print ("GET method in settings class")
         try:
             with open('./data/flow_sensors.json', 'r') as f:  # Read settings from json file if it exists
@@ -244,7 +247,10 @@ class save_settings(ProtectedPage):
         print "settings : " + str(settings)
         for key in qdict:
             # watch out for checkboxes since they only return a value in qdict if they're checked!!
-            settings[key] = qdict[key]
+            if key == "pulses_per_liter":
+                settings[key] = float(qdict[key])
+            else:
+                settings[key] = qdict[key]
         fixPerHour()
         reset_flow_sensors()
         print "after update from qdict, settings = " + str(settings)

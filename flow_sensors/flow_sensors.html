@@ -2,6 +2,18 @@ $def with (m_vals)
 
 $var title: $_('SIP - FLow Sensors Settings')
 $var page: plugins
+
+$code:
+    sensor_table = [["Seeed/Digiten 2 inch", 12],
+            ["Seeed/Digiten 1.5 inch", 30],
+            ["Seeed/Digiten 1 inch", 280],
+            ["Seeed/Digiten 3/4 inch", 330],
+            ["Seeed/Digiten 1/2 inch", 450],
+            ["Seeed/Digiten 3/8 inch", 1380],
+            ["Seeed/Digiten 1/4 inch", 4380],
+            ["Custom", 1000]];
+
+    
 <script>
    // Initialize behaviors
    jQuery(document).ready(function(){
@@ -12,9 +24,67 @@ $var page: plugins
          window.location="/";
       });
        jQuery("button#docButton").click(function(){
-           window.open("https://github.com/DaveSprague", "_blank");
+           window.open("https://github.com/DaveSprague/sip_plugins/flow_sensors/flow_sensors.html", "_blank");
        })
    });
+
+   // I could just define this table in javascript but thought I might want to maintain it on
+   // the server side??  Another option is just to get ride of the table and just have the user
+   // enter the pulses per liter value in for whatever sensor they're using.
+   var sensorList = $:sensor_table
+   
+
+   function initialize_sensor_types() {
+    var x = document.getElementById("sensorType");
+    for (var i = 0; i < sensorList.length; i++) {
+        var option = document.createElement("option");
+        sensor_type_name = sensorList[i][0];
+        option.text = sensor_type_name;
+        if (sensor_type_name === '$m_vals["sensor_type"]') {
+            option.selected = true;
+            if (sensor_type_name === "Custom") {
+                sensorList[i][1] = '$m_vals["pulses_per_liter"]';
+                document.getElementById("pulsePerLiter").value = '$m_vals["pulses_per_liter"]';
+                document.getElementById("pulsePerLiter").style.color = "green";
+            }
+        }
+     x.add(option);
+     }
+   }
+   
+    function update_ppl() {
+        document.getElementById("pulsePerLiter").removeAttribute("readonly");
+        var x = document.getElementById("sensorType").value;
+        document.getElementById("pulsePerLiter").value = sensorList.find(function(ent){
+            return ent[0] === x;
+        })[1];
+        if (x === "Custom") {
+            document.getElementById("pulsePerLiter").removeAttribute("readonly");
+            document.getElementById("pulsePerLiter").style.color = "green";
+        } else {
+            document.getElementById("pulsePerLiter").setAttribute("readonly", "");
+            document.getElementById("pulsePerLiter").style.color = "black";
+        }
+    }
+
+    function custom_ppl() {
+        // user can enter a custom pulses per liter value for the Custom entry so we save it here
+        // and if they save those settings it gets saved in the plugins settins json file.
+        var ppl = document.getElementById("pulsePerLiter").value;
+        var sensor = document.getElementById("sensorType").value;
+        for (var i = 0; i < sensorList.length; i++) {
+            if (sensorList[i][0] === "Custom") {
+                sensorList[i][1] = ppl
+                break;
+            }
+        }
+    }
+
+    function run_onload() {
+        initialize_sensor_types();
+        update_ppl();
+    }
+    window.onload=run_onload;
 </script>
 
 <div id="plugin">
@@ -25,7 +95,14 @@ $var page: plugins
    </p>
    <br>
    <form id="pluginForm" action="/flow_sensors-save" method="get">
-   <div class='option' title='Type of Interface to Flow Sensors'><span class='label'>$_('Interface'):</span>
+
+    <div class='option' title='Units for water quantity -- Liters or Gallons'><span class='label'>$_('Water Quantity Units'):</span>
+        <input type="radio" name="units" value="Gallons" ${" checked" if m_vals[u"units"]==u"Gallons" else ""}>Gallons
+        <input type="radio" name="units" value="Liters" ${" checked" if m_vals[u"units"]==u"Liters" else ""}>Liters
+        <span class='tooltip'>$_('Select the units to be used for water quantity')</span>
+    </div>
+
+    <div class='option' title='Type of Interface to Flow Sensors'><span class='label'>$_('Interface'):</span>
       <select name="interface">
          <option value="Simulated" ${" selected" if m_vals[u"interface"]=="Simulated" else ""}>Simulated</option>
          <option value="Arduino-Serial" ${" selected" if m_vals[u"interface"]=="Arduino-Serial" else ""}>Arduino-Serial</option>
@@ -35,21 +112,16 @@ $var page: plugins
       <span class='tooltip'>$_('Method used to interface to flow_sensors')</span>
    </div>
 
-<div class='option' title='Type of Flow Sensors'><span class='label'>$_('Flow Sensor Type'):</span>
-      <select name="sensor_type">
-         <option value="Seeed 1/2 inch" ${" selected" if m_vals[u"sensor_type"]=="Seeed 1/2 inch" else ""}>Seeed 1/2 inch</option>
-         <option value="Seeed 3/4 inch" ${" selected" if m_vals[u"sensor_type"]=="Seeed 3/4 inch" else ""}>Seeed 3/4 inch</option>
-         
-      </select>
-      <span class='tooltip'>$_('Type of flow_sensor being used')</span>
-   </div>
+    <div class='option' title='Type of Flow Sensors'><span class='label'>$_('Flow Sensor Type'):</span>
+        <select name="sensor_type" id="sensorType" onChange="update_ppl()">
+            
+        </select>
+        <span class='tooltip'>$_('Type of flow_sensor being used')</span>
+    </div>
 
-   <div class='option' title='Units for water quantity -- Liters or Gallons'><span class='label'>$_('Water Quantity Units'):</span>
-      <input type="radio" name="units" value="Gallons" ${" checked" if m_vals[u"units"]==u"Gallons" else ""}>Gallons
-      <input type="radio" name="units" value="Liters" ${" checked" if m_vals[u"units"]==u"Liters" else ""}>Liters
-      <span class='tooltip'>$_('Select the units to be used for water quantity')</span>
-   </div>
-   <br>
+    <div class'option' title='Pulses per Liter'><span class='label'>$_('Pulses per Liter'):</span>
+        Pulses per Liter: <input type="text" id="pulsePerLiter" name="pulses_per_liter" onChange="custom_ppl()" value=0><br>
+        <span class='tooltip'>$_('Type of flow_sensor being used')</span>
    </form>
 </div>
 <div id="controls">
