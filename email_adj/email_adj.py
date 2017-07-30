@@ -123,7 +123,7 @@ class EmailSender(Thread):
         
                             print "constructing log line"
                             loglist = ['"'+name+'":"'+func()+'"' for name,func in gv.logged_values]
-                            logline += ','.join(loglist)'
+                            logline = ','.join(loglist)'
 
                         #body = 'On ' + time.strftime("%d.%m.%Y at %H:%M:%S", time.localtime(time.time())) + \
                         #       ': System last run: ' + 'Station ' + str(gv.lrun[0]) + \
