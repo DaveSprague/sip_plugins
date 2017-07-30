@@ -116,14 +116,22 @@ class EmailSender(Thread):
 
                         dur = str(timestr(gv.lrun[2]))
                         start = time.gmtime(gv.now - gv.lrun[2])
+                        
+                        ## this code added by David L Sprague
+                        if gv.sd['lg']:
+                            print "log enabled..."
+        
+                            print "constructing log line"
+                            loglist = ['"'+name+'":"'+func()+'"' for name,func in gv.logged_values]
+                            logline += ','.join(loglist)'
 
-                        body = 'On ' + time.strftime("%d.%m.%Y at %H:%M:%S", time.localtime(time.time())) + \
-                               ': System last run: ' + 'Station ' + str(gv.lrun[0]) + \
-                               ', Program ' + pgr + \
-                               ', Duration ' + dur + \
-                               ', Start time ' + time.strftime("%d.%m.%Y at %H:%M:%S", start)
+                        #body = 'On ' + time.strftime("%d.%m.%Y at %H:%M:%S", time.localtime(time.time())) + \
+                        #       ': System last run: ' + 'Station ' + str(gv.lrun[0]) + \
+                        #       ', Program ' + pgr + \
+                        #       ', Duration ' + dur + \
+                        #       ', Start time ' + time.strftime("%d.%m.%Y at %H:%M:%S", start)
 
-                        self.try_mail(subject, body)     # send email without attachment
+                        self.try_mail(subject, logline)     # send email without attachment
 
                 self._sleep(1)
 
