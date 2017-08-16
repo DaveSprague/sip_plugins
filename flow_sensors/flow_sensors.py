@@ -27,6 +27,7 @@ import thread
 import random
 import serial
 from blinker import signal
+from multiprocessing import Process, Value
 
 # Add new URLs to access classes in this plugin.
 urls.extend([
@@ -74,6 +75,20 @@ except AttributeError:
 
 
 # TODO: add support for other types of RPi serial interfaces with different /dev/names
+
+gpio_count = Value('i', 0)
+
+def gpio_callback(channel):
+    gpio_count.value += 1
+
+def callback_process(pin):
+    from RPi import GPIO
+    GPIO.setup(pin, GPIO.IN)
+    ret = GPIO.add_event_detect(pin, GPIO.RISING, callback=gpio_callback)
+    print 'callback_process started', ret
+    while 1:
+        time.sleep(1)
+
 
 def flow_sensor_loop():
     """
@@ -151,8 +166,10 @@ def read_flow_counters(reset=False):
         return vals
 
     elif gv.plugin_data['fs']['settings']['interface'] == 'RaspberryPi-GPIO':
-        pass
-        return [0]*8
+        if reset:
+            gpio_count.value = 0
+        value = gpio_count.value
+        return [value]*8
 
     print("Flow Sensor Type Failed in Read")
     return False
@@ -209,6 +226,7 @@ def notify_station_scheduled(name, **kw):
 
 reset_flow_sensors()
 thread.start_new_thread(flow_sensor_loop, ())
+Process(target=callback_process, args=(3,)).start()
 
 program_started = signal('stations_scheduled') # subscribe to signal when programs/stations start running
 program_started.connect(notify_station_scheduled) # specify callback for this signal
