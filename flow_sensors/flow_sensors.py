@@ -123,7 +123,7 @@ def read_flow_counters(reset=False):
     Supports simulated flow sensors (for testing UI), flow sensors connected to an Arduino and
       perhaps flow sensors connected directly to the Pi.
     """
-    # print "reading flow sensors"
+    print "reading flow sensors"
     if gv.plugin_data['fs']['settings']['interface'] == 'Simulated':
         if reset:
             gv.plugin_data['fs']['simulated_counters'] = [0]*8
@@ -139,11 +139,11 @@ def read_flow_counters(reset=False):
         else:
             serial_ch.write('RD\n')
         serial_ch.flush()
-        #print("Writing to Arduino")
+        print("Writing to Arduino")
         time.sleep(0.2)
         line = serial_ch.readline().rstrip()
-        #print("serial input from Arduino is: " + line)
-        #print("serial input has been printed")
+        print("serial input from Arduino is: " + line)
+        print("serial input has been printed")
         if line == '':
             return [0]*8
         else:
@@ -166,7 +166,7 @@ def update_flow_values():
     current_time = time.time()
 
     elapsed_prev_read = current_time - gv.plugin_data['fs']['prev_read_time']  # for flow rate
-    # print("elapsed time: " + str(elapsed_time))
+    print("elapsed time: " + str(elapsed_time))
 
     prev_cntrs = gv.plugin_data['fs']['prev_read_cntrs']
 
@@ -189,8 +189,8 @@ def update_flow_values():
     gv.plugin_data['fs']['rates'] = [(cntr-prev_cntr)*rate_conv_mult/elapsed_prev_read for \
                                      cntr, prev_cntr in zip(curr_cntrs, prev_cntrs)]
     
-    # print("Rates:" + str(gv.plugin_data['fs']['rates']))
-    # print("Amounts:" + str(gv.plugin_data['fs']['program_amounts']))
+    print("Rates:" + str(gv.plugin_data['fs']['rates']))
+    print("Amounts:" + str(gv.plugin_data['fs']['program_amounts']))
 
     gv.plugin_data['fs']['prev_read_time'] = current_time
     gv.plugin_data['fs']['prev_read_cntrs'] = curr_cntrs
