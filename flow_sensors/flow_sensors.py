@@ -166,7 +166,7 @@ def update_flow_values():
     current_time = time.time()
 
     elapsed_prev_read = current_time - gv.plugin_data['fs']['prev_read_time']  # for flow rate
-    print("elapsed time: " + str(elapsed_time))
+    print("elapsed time: " + str(elapsed_prev_read))
 
     prev_cntrs = gv.plugin_data['fs']['prev_read_cntrs']
 
