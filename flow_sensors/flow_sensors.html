@@ -1,17 +1,17 @@
 $def with (m_vals)
 
-$var title: $_('SIP - FLow Sensors Settings')
+$var title: $_(u'SIP - FLow Sensors Settings')
 $var page: plugins
 
 $code:
-    sensor_table = [["Seeed/Digiten 2 inch", 12],
-            ["Seeed/Digiten 1.5 inch", 30],
-            ["Seeed/Digiten 1 inch", 280],
-            ["Seeed/Digiten 3/4 inch", 330],
-            ["Seeed/Digiten 1/2 inch", 450],
-            ["Seeed/Digiten 3/8 inch", 1380],
-            ["Seeed/Digiten 1/4 inch", 4380],
-            ["Custom", 1000]];
+    sensor_table = [[u"Seeed/Digiten 2 inch", 12],
+            [u"Seeed/Digiten 1.5 inch", 30],
+            [u"Seeed/Digiten 1 inch", 280],
+            [u"Seeed/Digiten 3/4 inch", 330],
+            [u"Seeed/Digiten 1/2 inch", 450],
+            [u"Seeed/Digiten 3/8 inch", 1380],
+            [u"Seeed/Digiten 1/4 inch", 4380],
+            [u"Custom", 1000]];
 
     
 <script>
@@ -88,43 +88,43 @@ $code:
 </script>
 
 <div id="plugin">
-   <div class="title">$_('Flow Sensors Settings')
-   <button class="execute" id="docButton" type="button" >$_('Help')</button>
+   <div class="title">$_(u'Flow Sensors Settings')
+   <button class="execute" id="docButton" type="button" >$_(u'Help')</button>
    </div>
-   <p>$_('A plugin for using flow sensors to measure water usage.')
+   <p>$_(u'A plugin for using flow sensors to measure water usage.')
    </p>
    <br>
    <form id="pluginForm" action="/flow_sensors-save" method="get">
 
-    <div class='option' title='Units for water quantity -- Liters or Gallons'><span class='label'>$_('Water Quantity Units'):</span>
+    <div class='option' title='Units for water quantity -- Liters or Gallons'><span class='label'>$_(u'Water Quantity Units'):</span>
         <input type="radio" name="units" value="Gallons" ${" checked" if m_vals[u"units"]==u"Gallons" else ""}>Gallons
         <input type="radio" name="units" value="Liters" ${" checked" if m_vals[u"units"]==u"Liters" else ""}>Liters
-        <span class='tooltip'>$_('Select the units to be used for water quantity')</span>
+        <span class='tooltip'>$_(u'Select the units to be used for water quantity')</span>
     </div>
 
-    <div class='option' title='Type of Interface to Flow Sensors'><span class='label'>$_('Interface'):</span>
+    <div class='option' title='Type of Interface to Flow Sensors'><span class='label'>$_(u'Interface'):</span>
       <select name="interface">
          <option value="Simulated" ${" selected" if m_vals[u"interface"]=="Simulated" else ""}>Simulated</option>
          <option value="Arduino-Serial" ${" selected" if m_vals[u"interface"]=="Arduino-Serial" else ""}>Arduino-Serial</option>
          <option value="RaspberryPi-GPIO" ${" selected" if m_vals[u"interface"]=="RaspberryPi-GPIO" else ""}>RaspberryPi-GPIO</option>
          
       </select>
-      <span class='tooltip'>$_('Method used to interface to flow_sensors')</span>
+      <span class='tooltip'>$_(u'Method used to interface to flow_sensors')</span>
    </div>
 
-    <div class='option' title='Type of Flow Sensors'><span class='label'>$_('Flow Sensor Type'):</span>
+    <div class='option' title='Type of Flow Sensors'><span class='label'>$_(u'Flow Sensor Type'):</span>
         <select name="sensor_type" id="sensorType" onChange="update_ppl()">
             
         </select>
-        <span class='tooltip'>$_('Type of flow_sensor being used')</span>
+        <span class='tooltip'>$_(u'Type of flow_sensor being used')</span>
     </div>
 
-    <div class'option' title='Pulses per Liter'><span class='label'>$_('Pulses per Liter'):</span>
+    <div class'option' title='Pulses per Liter'><span class='label'>$_(u'Pulses per Liter'):</span>
         Pulses per Liter: <input type="text" id="pulsePerLiter" name="pulses_per_liter" onChange="custom_ppl()" value=0><br>
-        <span class='tooltip'>$_('Type of flow_sensor being used')</span>
+        <span class='tooltip'>$_(u'Type of flow_sensor being used')</span>
    </form>
 </div>
 <div id="controls">
-    <button id="cSubmit" class="submit"><b>$_('Submit')</b></button>
-    <button id="cCancel" class="cancel danger">$_('Cancel')</button>
+    <button id="cSubmit" class="submit"><b>$_(u'Submit')</b></button>
+    <button id="cCancel" class="cancel danger">$_(u'Cancel')</button>
 </div>
