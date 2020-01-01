@@ -21,13 +21,13 @@ from __future__ import print_function
 import web  # web.py framework
 import gv  # Get access to SIP's settings
 from urls import urls  # Get access to ospi's URLs
-from ospi import template_render  #  Needed for working with web.py templates
+from sip import template_render  #  Needed for working with web.py templates
 from webpages import ProtectedPage  # Needed for security
 import json  # for working with data file
 import time
-import thread
+from threading import Thread
 import random
-import serial
+import serial     #Since sip.py is run as root you need to install pyserial using sudo pip3
 from blinker import signal
 
 # Add new URLs to access classes in this plugin.
@@ -78,9 +78,9 @@ except AttributeError:
 # TODO: add support for other types of RPi serial interfaces with different /dev/names
 
 def flow_sensor_loop():
-    u"u"u"
+    """
     This tread will update the flow sensor values every N seconds.
-    u"u""
+    """
     delta_t = 3.0 # seconds
     while True:
         update_flow_values()
@@ -125,13 +125,14 @@ def read_flow_counters(reset=False):
     Supports simulated flow sensors (for testing UI), flow sensors connected to an Arduino and
       perhaps flow sensors connected directly to the Pi.
     """
-    print u"reading flow sensors"
+    print(u"reading flow sensors")
     if gv.plugin_data[u"fs"][u"settings"][u"interface"] == u"Simulated":
         if reset:
             gv.plugin_data[u"fs"][u"simulated_counters"] = [0]*8
         else:
-            gv.plugin_data[u"fs"][u"simulated_counters"] = [cntr + random.random()*40 + 180 for
-                                                          cntr in gv.plugin_data[u"fs"][u"simulated_counters"]]
+            current_counters = gv.plugin_data[u"fs"][u"simulated_counters"]
+            new_counters = [count + valve*(random.random()*40 + 180) for valve, count in zip(gv.srvals, current_counters)]
+            gv.plugin_data[u"fs"][u"simulated_counters"] = new_counters
         return gv.plugin_data[u"fs"][u"simulated_counters"]
 
     elif gv.plugin_data[u"fs"][u"settings"][u"interface"] == u"Arduino-Serial":
@@ -191,8 +192,8 @@ def update_flow_values():
     gv.plugin_data[u"fs"][u"rates"] = [(cntr-prev_cntr)*rate_conv_mult/elapsed_prev_read for \
                                      cntr, prev_cntr in zip(curr_cntrs, prev_cntrs)]
     
-    print(u"Rates:" + str(gv.plugin_data[u"fs"][u"rates"]))
-    print(u"Amounts:" + str(gv.plugin_data[u"fs"][u"program_amounts"]))
+    print(u"Rates:" + str(["%0.2f" % val for val in gv.plugin_data[u"fs"][u"rates"]]))
+    print(u"Amounts:" + str(["%0.2f" % val for val in gv.plugin_data[u"fs"][u"program_amounts"]]))
 
     gv.plugin_data[u"fs"][u"prev_read_time"] = current_time
     gv.plugin_data[u"fs"][u"prev_read_cntrs"] = curr_cntrs
@@ -207,10 +208,12 @@ def notify_station_scheduled(name, **kw):
       and flow rate/amount values in the gv.
     """
     reset_flow_sensors()
-    #print(u"Some stations have been scheduled: {}".format(str(gv.rs)))
+    print(u"Some stations have been scheduled: {}".format(str(gv.rs)))
 
 reset_flow_sensors()
-thread.start_new_thread(flow_sensor_loop, ())
+fs_loop = Thread(target=flow_sensor_loop)
+fs_loop.daemon = True
+fs_loop.start()
 
 program_started = signal(u"stations_scheduled") # subscribe to signal when programs/stations start running
 program_started.connect(notify_station_scheduled) # specify callback for this signal
@@ -233,7 +236,7 @@ class settings(ProtectedPage):
                 reset_flow_sensors()
         except IOError:  # If file does not exist return empty value
             print(u"No flow_sensors.json file")
-            print u"my settings here are: " + str(settings)
+            print(u"my settings here are: " + str(settings))
         return template_render.flow_sensors(settings)  # open settings page
 
 class save_settings(ProtectedPage):
@@ -245,8 +248,8 @@ class save_settings(ProtectedPage):
     def GET(self):
         settings = gv.plugin_data[u"fs"][u"settings"]
         qdict = web.input()  # Dictionary of values returned as query string from settings page.
-        print u"qdict = " + str(qdict)  # for testing
-        print u"settings : " + str(settings)
+        print(u"qdict = " + str(qdict))  # for testing
+        print(u"settings : " + str(settings))
         for key in qdict:
             # watch out for checkboxes since they only return a value in qdict if they're checked!!
             if key == u"pulses_per_liter":
@@ -255,9 +258,8 @@ class save_settings(ProtectedPage):
                 settings[key] = qdict[key]
         fixPerHour()
         reset_flow_sensors()
-        print u"after update from qdict, settings = " + str(settings)
+        print(u"after update from qdict, settings = " + str(settings))
         with open(u"./data/flow_sensors.json", u"w") as f:  # Edit: change name of json file
              json.dump(settings, f) # save to file
-             print u"flow sensor settings file saved"          
+             print(u"flow sensor settings file saved")          
         raise web.seeother(u"/")  # Return user to home page.
-
